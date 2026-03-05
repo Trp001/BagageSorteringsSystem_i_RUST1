@@ -1,0 +1,24 @@
+[package]
+name = "BagageSorteringsSystem_i_RUST"
+description = "A short description of my package"
+documentation = "https://docs.rs/bitflags"
+readme = "README.md"
+homepage = "https://serde.rs"
+license = "MIT OR Apache-2.0"
+license-file ="LICENSE.txt"
+keywords = ["gamedev", "graphics"]
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+time = { version = "0.3.47" }
+[profile.dev.package."*"]
+debug = false
+[profile.debugging]
+inherits ="dev"
+debug = true
+[build]
+rustflags ="-Zthreads=8"
+[target.'cfg(target_os = "linux")']
+[resolver]
+feature-unification ="workspace"

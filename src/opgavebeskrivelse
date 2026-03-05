@@ -1,0 +1,67 @@
+//Bagagesorteringssystem i Rust
+  Beskrivelse af problemområdet
+  Bagagesorteringssystemet består af et antal skranker (check-in) til modtagelse og registrering af bagage, et automatiseret sorteringsanlæg samt et antal terminaler (gates), hvor bagagen til givne flyafgange samles og lastes på fly. Skranker, sortering og terminaler er forbundet med transportbånd, der bruger stregkodelæsere til at spore bagage gennem systemet. Systemet er overvåget af en central server, der modtager data fra enhederne og tilbyder services til disse.
+
+
+  Systemets informationer kommer fra følgende elementer
+  Reservationssystem	Passagernummer, Navn, Flyafgang
+  Flyveplan	Flyafgang, Terminalnummer (Gate-nummer)
+  Skranker (Check-in)	Skranke åbnes/lukkes, Passagernummer, Bagagenummer ,Tidsstempel
+  Sorteringsanlæg	Bagagenummer, Tidsstempel (ind), Tidsstempel (ud/sorteret)
+  Terminaler (Gates)	Gate åbnes/lukkes, Bagagenummer, Tidsstempel
+
+  Krav til implementering i Rust
+  Implementér et program i Rust, der simulerer bagagesorteringssystemet ved hjælp af tråde og synkronisering.
+  1. Dataoprettelse
+  •	Opret data fra reservationssystemet som statiske data indlejret i datastrukturer eller læs dem fra en tekstfil ved hjælp af std::fs.
+  •	Flyveplanen skal kunne opdateres over tid enten via brugerinput eller tråde.
+  2. Trådhåndtering
+  •	Brug std::thread til at oprette tråde, der repræsenterer skranker, sorteringsanlæg og terminaler.
+  •	Synkronisering mellem tråde skal sikres med std::sync::Mutex eller std::sync::RwLock.
+  3. Bufferhåndtering
+  •	Implementer buffere som vektorer (f.eks. Vec<T>) indkapslet i Arc<Mutex<T>> for at sikre trådsikker adgang.
+  •	Buffere skal have en fast kapacitet for at simulere begrænsede ressourcer.
+  4. Simulering af åbning og lukning af terminaler og skranker
+  •	Terminaler og skranker skal kunne åbnes og lukkes via brugerinput eller som en del af trådhåndteringen.
+  5. Logning og udskrift
+  •	Brug println! til udskrivning til skærmen.
+  •	Log til filer med std::fs::File og write! makroen for at sikre persistens.
+  6. Monitor og synkronisering
+  •	Implementer monitorsystemer ved hjælp af Arc<Mutex<T>> for at synkronisere adgangen til delt data mellem tråde.
+  Måling (throughput/synkronisering)
+  Indikator: throughput (enheder/sek) og/eller ventetid pr. bufferoperation.
+  Før: Mål baseline på defineret workload.
+  Ændring: Optimer bufferkapaciteter, låsevalg (Mutex/RwLock) og trådefordeling.
+  Efter: Gentag samme måling.
+  Aflever: Målenote + Ændringslog + kort README-tabel med før/efter.
+  Eksempelstruktur
+  use std::sync::{Arc, Mutex};
+  use std::thread;
+
+  struct check_in_counter {
+      id: u32,
+      baggage_log: Arc<Mutex<Vec<String>>>,
+  }
+
+  impl check_in_counter {
+      fn new(id: u32, baggage_log: Arc<Mutex<Vec<String>>>) -> Self {
+          Self { id, baggage_log }
+      }
+
+      fn process_baggage(&self, baggage_id: &str) {
+          let mut log = self.baggage_log.lock().unwrap();
+          log.push(format!("Check-in {} registrerede bagage: {}", self.id, baggage_id));
+          println!("Skranke {} registrerede bagage: {}", self.id, baggage_id);
+      }
+  }
+
+  fn main() {
+      let baggage_log = Arc::new(Mutex::new(Vec::new()));
+
+      let counter1 = check_in_counter::new(1, baggage_log.clone());
+      let handle = thread::spawn(move || {
+          counter1.process_baggage("BAG123");
+      });
+
+      handle.join().unwrap();
+  }
